@@ -7,9 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,7 +32,7 @@ public class ClienteService implements iClienteService {
             O retorno deste método deverá ser apenas um integer que represente a idade deste cliente.
          */
 
-        return 0;
+        return (int) ChronoUnit.YEARS.between(cliente.getDataNascimento(), LocalDate.now());
     }
 
     @Override
@@ -50,15 +48,16 @@ public class ClienteService implements iClienteService {
             Saída esperada: uma lista contendo APENAS os nomes dos clientes e com todos os seus valores em letras maiúsculas.
 
             Considere que a consulta acima já retorna uma lista completa com todos os clientes existentes.
-         */
+
 
         List<String> listaNomes = new ArrayList<>();
 
         for (int i = 0; i < listaClientes.size(); i++) {
             listaNomes.add(listaClientes.get(i).getNome().toUpperCase());
         }
+        */
 
-        return listaNomes;
+        return listaClientes.stream().map(x->x.getNome().toUpperCase(Locale.ROOT)).collect(Collectors.toList());
     }
 
     @Override
@@ -72,9 +71,9 @@ public class ClienteService implements iClienteService {
             o nome do cliente encontrado. Caso contrário, devolver uma mensagem de erro avisando que não existe ninguém com o código informado.
          */
 
-        Cliente cliente = clienteRepository.findById(codigo).get();
+        Optional<Cliente>  cliente = clienteRepository.findById(codigo);
 
-        return cliente.getNome();
+        return (cliente.isPresent()) ?  cliente.get().getNome() : "Não existe cliente com o código " + codigo;
     }
 
     @Override
@@ -91,7 +90,9 @@ public class ClienteService implements iClienteService {
                 - quantidade máxima de clientes na lista: 3
          */
 
-        return listaClientes;
+        return listaClientes.stream()
+                .filter(x->x.getGenero().equals('F') && ChronoUnit.YEARS.between(x.getDataNascimento(), LocalDate.now())>=30)
+                .limit(3).collect(Collectors.toList());
     }
 
     @Override
@@ -106,11 +107,12 @@ public class ClienteService implements iClienteService {
 
         List<Cliente> listaClientes = clienteRepository.findAll();
 
-        listaClientes.stream().skip(3)
-                .sorted(Comparator.comparingInt(Cliente::getQuantidadeVisistas))
-                .map(x -> { return new Cliente(listaClientes.get(0).getCodigo(), listaClientes.get(0).getNome(), listaClientes.get(0).getDataNascimento(), listaClientes.get(0).getGenero(), listaClientes.get(0).getQuantidadeVisistas()); })
+        return listaClientes.stream()   //.skip(3)
+                .sorted(Comparator.comparingInt(Cliente::getQuantidadeVisistas).reversed())
+                //.map(x -> { return new Cliente(listaClientes.get(0).getCodigo(), listaClientes.get(0).getNome(), listaClientes.get(0).getDataNascimento(), listaClientes.get(0).getGenero(), listaClientes.get(0).getQuantidadeVisistas()); })
+                .limit(3)
                 .collect(Collectors.toList());
 
-        return listaClientes;
+        //return listaClientes;
     }
 }
